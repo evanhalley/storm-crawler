@@ -153,6 +153,15 @@ config:
   # used by fetcher bolts
   sitemap.discovery: false
 
+  # determines what sitemap extensions to parse from the sitemap and add
+  # to an outlinks metadata object
+  sitemap.extensions:
+    - IMAGE
+    - LINKS
+    - MOBILE
+    - NEWS
+    - VIDEO
+
   # Default implementation of Scheduler
   scheduler.class: "com.digitalpebble.stormcrawler.persistence.DefaultScheduler"
 
