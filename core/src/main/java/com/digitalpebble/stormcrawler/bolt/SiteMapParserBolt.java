@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import crawlercommons.sitemaps.extension.Extension;
 import org.apache.commons.lang.StringUtils;
 import org.apache.storm.metric.api.MeanReducer;
 import org.apache.storm.metric.api.ReducedMetric;
@@ -90,6 +91,8 @@ public class SiteMapParserBolt extends StatusEmitterBolt {
 
     /** Delay in minutes used for scheduling sub-sitemaps **/
     private int scheduleSitemapsWithDelay = -1;
+
+    private List<String> attributeTypesToParse;
 
     @Override
     public void execute(Tuple tuple) {
@@ -294,6 +297,7 @@ public class SiteMapParserBolt extends StatusEmitterBolt {
                 Outlink ol = filterOutlink(sURL, target, parentMetadata,
                         isSitemapKey, "false", "sitemap.lastModified",
                         lastModifiedValue);
+                //smurl.getAttributesForExtension(Extension..IMAGE)[0].asMap()
                 if (ol == null) {
                     continue;
                 }
@@ -321,6 +325,7 @@ public class SiteMapParserBolt extends StatusEmitterBolt {
                         new MeanReducer()), 30);
         scheduleSitemapsWithDelay = ConfUtils.getInt(stormConf,
                 "sitemap.schedule.delay", scheduleSitemapsWithDelay);
+        attributeTypesToParse = ConfUtils.loadListFromConf("sitemap.extensions", stormConf);
     }
 
     @Override
