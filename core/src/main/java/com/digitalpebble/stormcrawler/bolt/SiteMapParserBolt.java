@@ -29,8 +29,10 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import crawlercommons.sitemaps.extension.Extension;
+import crawlercommons.sitemaps.extension.ExtensionMetadata;
 import org.apache.commons.lang.StringUtils;
 import org.apache.storm.metric.api.MeanReducer;
 import org.apache.storm.metric.api.ReducedMetric;
@@ -269,6 +271,7 @@ public class SiteMapParserBolt extends StatusEmitterBolt {
             Iterator<SiteMapURL> iter = sitemapURLs.iterator();
             while (iter.hasNext()) {
                 SiteMapURL smurl = iter.next();
+
                 // TODO handle priority in metadata
                 double priority = smurl.getPriority();
                 // TODO convert the frequency into a numerical value and handle
@@ -297,6 +300,7 @@ public class SiteMapParserBolt extends StatusEmitterBolt {
                 Outlink ol = filterOutlink(sURL, target, parentMetadata,
                         isSitemapKey, "false", "sitemap.lastModified",
                         lastModifiedValue);
+
                 //smurl.getAttributesForExtension(Extension..IMAGE)[0].asMap()
                 if (ol == null) {
                     continue;
@@ -307,6 +311,21 @@ public class SiteMapParserBolt extends StatusEmitterBolt {
         }
 
         return links;
+    }
+
+    public void addAttributesToMetadata(SiteMapURL url, Metadata metadata) {
+
+        for (String attributeType : attributeTypesToParse) {
+            Extension extension = Extension.valueOf(attributeType);
+            ExtensionMetadata[] extensionMetadata = url.getAttributesForExtension(extension);
+
+            for (ExtensionMetadata extensionMetadatum : extensionMetadata) {
+
+                for (Map.Entry<String, String[]> entry : extensionMetadatum.asMap().entrySet()) {
+                    metadata.addValues(entry.getKey(), Arrays.asList(entry.getValue()));
+                }
+            }
+        }
     }
 
     @Override
