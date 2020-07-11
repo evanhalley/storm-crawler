@@ -301,10 +301,10 @@ public class SiteMapParserBolt extends StatusEmitterBolt {
                         isSitemapKey, "false", "sitemap.lastModified",
                         lastModifiedValue);
 
-                //smurl.getAttributesForExtension(Extension..IMAGE)[0].asMap()
                 if (ol == null) {
                     continue;
                 }
+                addAttributesToMetadata(smurl, ol.getMetadata());
                 links.add(ol);
                 LOG.debug("{} : [sitemap] {}", url, target);
             }
@@ -319,10 +319,13 @@ public class SiteMapParserBolt extends StatusEmitterBolt {
             Extension extension = Extension.valueOf(attributeType);
             ExtensionMetadata[] extensionMetadata = url.getAttributesForExtension(extension);
 
-            for (ExtensionMetadata extensionMetadatum : extensionMetadata) {
+            if (extensionMetadata != null) {
 
-                for (Map.Entry<String, String[]> entry : extensionMetadatum.asMap().entrySet()) {
-                    metadata.addValues(entry.getKey(), Arrays.asList(entry.getValue()));
+                for (ExtensionMetadata extensionMetadatum : extensionMetadata) {
+
+                    for (Map.Entry<String, String[]> entry : extensionMetadatum.asMap().entrySet()) {
+                        metadata.addValues(attributeType + "." + entry.getKey(), Arrays.asList(entry.getValue()));
+                    }
                 }
             }
         }
@@ -345,6 +348,10 @@ public class SiteMapParserBolt extends StatusEmitterBolt {
         scheduleSitemapsWithDelay = ConfUtils.getInt(stormConf,
                 "sitemap.schedule.delay", scheduleSitemapsWithDelay);
         attributeTypesToParse = ConfUtils.loadListFromConf("sitemap.extensions", stormConf);
+
+        for (String type : attributeTypesToParse) {
+            parser.enableExtension(Extension.valueOf(type));
+        }
     }
 
     @Override

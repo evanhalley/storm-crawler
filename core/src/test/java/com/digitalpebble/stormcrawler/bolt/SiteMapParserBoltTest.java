@@ -18,10 +18,12 @@
 package com.digitalpebble.stormcrawler.bolt;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import clojure.lang.PersistentVector;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,6 +64,31 @@ public class SiteMapParserBoltTest extends ParsingTester {
 
         Assert.assertEquals(6, output.getEmitted(Constants.StatusStreamName)
                 .size());
+        // TODO test that the new links have the right metadata
+        List<Object> fields = output.getEmitted(Constants.StatusStreamName)
+                .get(0);
+        Assert.assertEquals(3, fields.size());
+    }
+
+    @Test
+    public void testSitemapParsingWithImageExtensions() throws IOException {
+
+        Map parserConfig = new HashMap();
+        parserConfig.put("sitemap.extensions", "IMAGE");
+        prepareParserBolt("test.parsefilters.json", parserConfig);
+
+        Metadata metadata = new Metadata();
+        // specify that it is a sitemap file
+        metadata.setValue(SiteMapParserBolt.isSitemapKey, "true");
+        // and its mime-type
+        metadata.setValue(HttpHeaders.CONTENT_TYPE, "application/xml");
+
+        parse("http://www.digitalpebble.com/sitemap.xml",
+                "digitalpebble.sitemap.extensions.xml", metadata);
+
+        Assert.assertEquals(6, output.getEmitted(Constants.StatusStreamName)
+                .size());
+        // TODO  for Evan test that the extension are accurate
         // TODO test that the new links have the right metadata
         List<Object> fields = output.getEmitted(Constants.StatusStreamName)
                 .get(0);
