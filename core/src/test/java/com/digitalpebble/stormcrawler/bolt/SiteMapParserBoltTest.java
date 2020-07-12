@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import clojure.lang.PersistentVector;
+import org.apache.storm.tuple.Values;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -72,7 +73,6 @@ public class SiteMapParserBoltTest extends ParsingTester {
 
     @Test
     public void testSitemapParsingWithImageExtensions() throws IOException {
-
         Map parserConfig = new HashMap();
         parserConfig.put("sitemap.extensions", "IMAGE");
         prepareParserBolt("test.parsefilters.json", parserConfig);
@@ -85,14 +85,18 @@ public class SiteMapParserBoltTest extends ParsingTester {
 
         parse("http://www.digitalpebble.com/sitemap.xml",
                 "digitalpebble.sitemap.extensions.xml", metadata);
-
-        Assert.assertEquals(6, output.getEmitted(Constants.StatusStreamName)
-                .size());
-        // TODO  for Evan test that the extension are accurate
-        // TODO test that the new links have the right metadata
-        List<Object> fields = output.getEmitted(Constants.StatusStreamName)
-                .get(0);
-        Assert.assertEquals(3, fields.size());
+        Values values = (Values) output.getEmitted(Constants.StatusStreamName).get(0);
+        Metadata parsedMetadata = (Metadata) values.get(1);
+        long numImgAttributes = parsedMetadata.keySet()
+                .stream()
+                .filter(key -> key.startsWith("IMAGE."))
+                .count();
+        Assert.assertEquals(5, numImgAttributes);
+        Assert.assertEquals("This is the caption.", parsedMetadata.getFirstValue("IMAGE.caption"));
+        Assert.assertEquals("http://example.com/photo.jpg", parsedMetadata.getFirstValue("IMAGE.loc"));
+        Assert.assertEquals("Example photo shot in Limerick, Ireland", parsedMetadata.getFirstValue("IMAGE.title"));
+        Assert.assertEquals("https://creativecommons.org/licenses/by/4.0/legalcode", parsedMetadata.getFirstValue("IMAGE.license"));
+        Assert.assertEquals("Limerick, Ireland", parsedMetadata.getFirstValue("IMAGE.geo_location"));
     }
 
     @Test
