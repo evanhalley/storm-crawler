@@ -18,12 +18,10 @@
 package com.digitalpebble.stormcrawler.bolt;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import clojure.lang.PersistentVector;
 import org.apache.storm.tuple.Values;
 import org.junit.Assert;
 import org.junit.Before;
@@ -34,7 +32,6 @@ import org.apache.storm.task.OutputCollector;
 import com.digitalpebble.stormcrawler.Constants;
 import com.digitalpebble.stormcrawler.Metadata;
 import com.digitalpebble.stormcrawler.TestUtil;
-import com.digitalpebble.stormcrawler.bolt.SiteMapParserBolt;
 import com.digitalpebble.stormcrawler.parse.ParsingTester;
 import com.digitalpebble.stormcrawler.protocol.HttpHeaders;
 
@@ -84,7 +81,7 @@ public class SiteMapParserBoltTest extends ParsingTester {
         metadata.setValue(HttpHeaders.CONTENT_TYPE, "application/xml");
 
         parse("http://www.digitalpebble.com/sitemap.xml",
-                "digitalpebble.sitemap.extensions.xml", metadata);
+                "digitalpebble.sitemap.extensions.image.xml", metadata);
         Values values = (Values) output.getEmitted(Constants.StatusStreamName).get(0);
         Metadata parsedMetadata = (Metadata) values.get(1);
         long numImgAttributes = parsedMetadata.keySet()
@@ -97,6 +94,55 @@ public class SiteMapParserBoltTest extends ParsingTester {
         Assert.assertEquals("Example photo shot in Limerick, Ireland", parsedMetadata.getFirstValue("IMAGE.title"));
         Assert.assertEquals("https://creativecommons.org/licenses/by/4.0/legalcode", parsedMetadata.getFirstValue("IMAGE.license"));
         Assert.assertEquals("Limerick, Ireland", parsedMetadata.getFirstValue("IMAGE.geo_location"));
+    }
+
+    @Test
+    public void testSitemapParsingWithMobileExtensions() throws IOException {
+        Map parserConfig = new HashMap();
+        parserConfig.put("sitemap.extensions", "MOBILE");
+        prepareParserBolt("test.parsefilters.json", parserConfig);
+
+        Metadata metadata = new Metadata();
+        // specify that it is a sitemap file
+        metadata.setValue(SiteMapParserBolt.isSitemapKey, "true");
+        // and its mime-type
+        metadata.setValue(HttpHeaders.CONTENT_TYPE, "application/xml");
+
+        parse("http://www.digitalpebble.com/sitemap.xml",
+                "digitalpebble.sitemap.extensions.mobile.xml", metadata);
+        Values values = (Values) output.getEmitted(Constants.StatusStreamName).get(0);
+        Metadata parsedMetadata = (Metadata) values.get(1);
+        long numImgAttributes = parsedMetadata.keySet()
+                .stream()
+                .filter(key -> key.startsWith("MOBILE."))
+                .count();
+        Assert.assertEquals(0, numImgAttributes);
+    }
+
+    @Test
+    public void testSitemapParsingWithLinkExtensions() throws IOException {
+        Map parserConfig = new HashMap();
+        parserConfig.put("sitemap.extensions", "LINKS");
+        prepareParserBolt("test.parsefilters.json", parserConfig);
+
+        Metadata metadata = new Metadata();
+        // specify that it is a sitemap file
+        metadata.setValue(SiteMapParserBolt.isSitemapKey, "true");
+        // and its mime-type
+        metadata.setValue(HttpHeaders.CONTENT_TYPE, "application/xml");
+
+        parse("http://www.digitalpebble.com/sitemap.xml",
+                "digitalpebble.sitemap.extensions.links.xml", metadata);
+        Values values = (Values) output.getEmitted(Constants.StatusStreamName).get(0);
+        Metadata parsedMetadata = (Metadata) values.get(1);
+        long numImgAttributes = parsedMetadata.keySet()
+                .stream()
+                .filter(key -> key.startsWith("LINKS."))
+                .count();
+        Assert.assertEquals(3, numImgAttributes);
+        Assert.assertEquals("alternate", parsedMetadata.getFirstValue("LINKS.params.rel"));
+        Assert.assertEquals("http://www.example.com/english/", parsedMetadata.getFirstValue("LINKS.href"));
+        Assert.assertEquals("en", parsedMetadata.getFirstValue("LINKS.params.hreflang"));
     }
 
     @Test
