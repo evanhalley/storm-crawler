@@ -146,6 +146,36 @@ public class SiteMapParserBoltTest extends ParsingTester {
     }
 
     @Test
+    public void testSitemapParsingWithNewsExtensions() throws IOException {
+        Map parserConfig = new HashMap();
+        parserConfig.put("sitemap.extensions", "NEWS");
+        prepareParserBolt("test.parsefilters.json", parserConfig);
+
+        Metadata metadata = new Metadata();
+        // specify that it is a sitemap file
+        metadata.setValue(SiteMapParserBolt.isSitemapKey, "true");
+        // and its mime-type
+        metadata.setValue(HttpHeaders.CONTENT_TYPE, "application/xml");
+
+        parse("http://www.digitalpebble.com/sitemap.xml",
+                "digitalpebble.sitemap.extensions.news.xml", metadata);
+        Values values = (Values) output.getEmitted(Constants.StatusStreamName).get(0);
+        Metadata parsedMetadata = (Metadata) values.get(1);
+        long numAttributes = parsedMetadata.keySet()
+                .stream()
+                .filter(key -> key.startsWith("NEWS."))
+                .count();
+        Assert.assertEquals(7, numAttributes);
+        Assert.assertEquals("The Example Times", parsedMetadata.getFirstValue("NEWS.name"));
+        Assert.assertEquals("en", parsedMetadata.getFirstValue("NEWS.language"));
+        Assert.assertArrayEquals(new String[] { "PressRelease", "Blog" }, parsedMetadata.getValues("NEWS.genres"));
+        Assert.assertEquals("2008-12-23T00:00Z", parsedMetadata.getFirstValue("NEWS.publication_date"));
+        Assert.assertEquals("Companies A, B in Merger Talks", parsedMetadata.getFirstValue("NEWS.title"));
+        Assert.assertArrayEquals(new String[] { "business", "merger", "acquisition", "A", "B" }, parsedMetadata.getValues("NEWS.keywords"));
+        Assert.assertArrayEquals(new String[] { "NASDAQ:A", "NASDAQ:B"}, parsedMetadata.getValues("NEWS.stock_tickers"));
+    }
+
+    @Test
     public void testSitemapParsingNoMT() throws IOException {
 
         Map parserConfig = new HashMap();
