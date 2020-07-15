@@ -176,6 +176,29 @@ public class SiteMapParserBoltTest extends ParsingTester {
     }
 
     @Test
+    public void testSitemapParsingWithVideoExtensions() throws IOException {
+        Map parserConfig = new HashMap();
+        parserConfig.put("sitemap.extensions", "VIDEO");
+        prepareParserBolt("test.parsefilters.json", parserConfig);
+
+        Metadata metadata = new Metadata();
+        // specify that it is a sitemap file
+        metadata.setValue(SiteMapParserBolt.isSitemapKey, "true");
+        // and its mime-type
+        metadata.setValue(HttpHeaders.CONTENT_TYPE, "application/xml");
+
+        parse("http://www.digitalpebble.com/sitemap.xml",
+                "digitalpebble.sitemap.extensions.video.xml", metadata);
+        Values values = (Values) output.getEmitted(Constants.StatusStreamName).get(0);
+        Metadata parsedMetadata = (Metadata) values.get(1);
+        long numAttributes = parsedMetadata.keySet()
+                .stream()
+                .filter(key -> key.startsWith("VIDEO."))
+                .count();
+        Assert.assertEquals(7, numAttributes);
+    }
+
+    @Test
     public void testSitemapParsingNoMT() throws IOException {
 
         Map parserConfig = new HashMap();
