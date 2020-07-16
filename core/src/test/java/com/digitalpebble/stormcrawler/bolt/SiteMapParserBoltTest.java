@@ -18,10 +18,14 @@
 package com.digitalpebble.stormcrawler.bolt;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import clojure.lang.PersistentVector;
+import crawlercommons.sitemaps.extension.Extension;
 import org.apache.storm.tuple.Values;
 import org.junit.Assert;
 import org.junit.Before;
@@ -71,7 +75,7 @@ public class SiteMapParserBoltTest extends ParsingTester {
     @Test
     public void testSitemapParsingWithImageExtensions() throws IOException {
         Map parserConfig = new HashMap();
-        parserConfig.put("sitemap.extensions", "IMAGE");
+        parserConfig.put("sitemap.extensions",  PersistentVector.create(Collections.singletonList(Extension.IMAGE.name())));
         prepareParserBolt("test.parsefilters.json", parserConfig);
 
         Metadata metadata = new Metadata();
@@ -84,22 +88,13 @@ public class SiteMapParserBoltTest extends ParsingTester {
                 "digitalpebble.sitemap.extensions.image.xml", metadata);
         Values values = (Values) output.getEmitted(Constants.StatusStreamName).get(0);
         Metadata parsedMetadata = (Metadata) values.get(1);
-        long numImgAttributes = parsedMetadata.keySet()
-                .stream()
-                .filter(key -> key.startsWith("IMAGE."))
-                .count();
-        Assert.assertEquals(5, numImgAttributes);
-        Assert.assertEquals("This is the caption.", parsedMetadata.getFirstValue("IMAGE.caption"));
-        Assert.assertEquals("http://example.com/photo.jpg", parsedMetadata.getFirstValue("IMAGE.loc"));
-        Assert.assertEquals("Example photo shot in Limerick, Ireland", parsedMetadata.getFirstValue("IMAGE.title"));
-        Assert.assertEquals("https://creativecommons.org/licenses/by/4.0/legalcode", parsedMetadata.getFirstValue("IMAGE.license"));
-        Assert.assertEquals("Limerick, Ireland", parsedMetadata.getFirstValue("IMAGE.geo_location"));
+        assertImageAttributes(parsedMetadata);
     }
 
     @Test
     public void testSitemapParsingWithMobileExtensions() throws IOException {
         Map parserConfig = new HashMap();
-        parserConfig.put("sitemap.extensions", "MOBILE");
+        parserConfig.put("sitemap.extensions", PersistentVector.create(Collections.singletonList(Extension.MOBILE.name())));
         prepareParserBolt("test.parsefilters.json", parserConfig);
 
         Metadata metadata = new Metadata();
@@ -112,17 +107,13 @@ public class SiteMapParserBoltTest extends ParsingTester {
                 "digitalpebble.sitemap.extensions.mobile.xml", metadata);
         Values values = (Values) output.getEmitted(Constants.StatusStreamName).get(0);
         Metadata parsedMetadata = (Metadata) values.get(1);
-        long numImgAttributes = parsedMetadata.keySet()
-                .stream()
-                .filter(key -> key.startsWith("MOBILE."))
-                .count();
-        Assert.assertEquals(0, numImgAttributes);
+        assertMobileAttributes(parsedMetadata);
     }
 
     @Test
     public void testSitemapParsingWithLinkExtensions() throws IOException {
         Map parserConfig = new HashMap();
-        parserConfig.put("sitemap.extensions", "LINKS");
+        parserConfig.put("sitemap.extensions",  PersistentVector.create(Collections.singletonList(Extension.LINKS.name())));
         prepareParserBolt("test.parsefilters.json", parserConfig);
 
         Metadata metadata = new Metadata();
@@ -135,20 +126,13 @@ public class SiteMapParserBoltTest extends ParsingTester {
                 "digitalpebble.sitemap.extensions.links.xml", metadata);
         Values values = (Values) output.getEmitted(Constants.StatusStreamName).get(0);
         Metadata parsedMetadata = (Metadata) values.get(1);
-        long numImgAttributes = parsedMetadata.keySet()
-                .stream()
-                .filter(key -> key.startsWith("LINKS."))
-                .count();
-        Assert.assertEquals(3, numImgAttributes);
-        Assert.assertEquals("alternate", parsedMetadata.getFirstValue("LINKS.params.rel"));
-        Assert.assertEquals("http://www.example.com/english/", parsedMetadata.getFirstValue("LINKS.href"));
-        Assert.assertEquals("en", parsedMetadata.getFirstValue("LINKS.params.hreflang"));
+        assertLinksAttributes(parsedMetadata);
     }
 
     @Test
     public void testSitemapParsingWithNewsExtensions() throws IOException {
         Map parserConfig = new HashMap();
-        parserConfig.put("sitemap.extensions", "NEWS");
+        parserConfig.put("sitemap.extensions",  PersistentVector.create(Collections.singletonList(Extension.NEWS.name())));
         prepareParserBolt("test.parsefilters.json", parserConfig);
 
         Metadata metadata = new Metadata();
@@ -161,24 +145,13 @@ public class SiteMapParserBoltTest extends ParsingTester {
                 "digitalpebble.sitemap.extensions.news.xml", metadata);
         Values values = (Values) output.getEmitted(Constants.StatusStreamName).get(0);
         Metadata parsedMetadata = (Metadata) values.get(1);
-        long numAttributes = parsedMetadata.keySet()
-                .stream()
-                .filter(key -> key.startsWith("NEWS."))
-                .count();
-        Assert.assertEquals(7, numAttributes);
-        Assert.assertEquals("The Example Times", parsedMetadata.getFirstValue("NEWS.name"));
-        Assert.assertEquals("en", parsedMetadata.getFirstValue("NEWS.language"));
-        Assert.assertArrayEquals(new String[] { "PressRelease", "Blog" }, parsedMetadata.getValues("NEWS.genres"));
-        Assert.assertEquals("2008-12-23T00:00Z", parsedMetadata.getFirstValue("NEWS.publication_date"));
-        Assert.assertEquals("Companies A, B in Merger Talks", parsedMetadata.getFirstValue("NEWS.title"));
-        Assert.assertArrayEquals(new String[] { "business", "merger", "acquisition", "A", "B" }, parsedMetadata.getValues("NEWS.keywords"));
-        Assert.assertArrayEquals(new String[] { "NASDAQ:A", "NASDAQ:B"}, parsedMetadata.getValues("NEWS.stock_tickers"));
+        assertNewsAttributes(parsedMetadata);
     }
 
     @Test
     public void testSitemapParsingWithVideoExtensions() throws IOException {
         Map parserConfig = new HashMap();
-        parserConfig.put("sitemap.extensions", "VIDEO");
+        parserConfig.put("sitemap.extensions",  PersistentVector.create(Collections.singletonList(Extension.VIDEO.name())));
         prepareParserBolt("test.parsefilters.json", parserConfig);
 
         Metadata metadata = new Metadata();
@@ -191,30 +164,40 @@ public class SiteMapParserBoltTest extends ParsingTester {
                 "digitalpebble.sitemap.extensions.video.xml", metadata);
         Values values = (Values) output.getEmitted(Constants.StatusStreamName).get(0);
         Metadata parsedMetadata = (Metadata) values.get(1);
-        long numAttributes = parsedMetadata.keySet()
-                .stream()
-                .filter(key -> key.startsWith("VIDEO."))
-                .count();
-        Assert.assertEquals(19, numAttributes);
-        Assert.assertEquals("http://www.example.com/thumbs/123.jpg", parsedMetadata.getFirstValue("VIDEO.thumbnail_loc"));
-        Assert.assertEquals("Grilling steaks for summer", parsedMetadata.getFirstValue("VIDEO.title"));
-        Assert.assertEquals("Alkis shows you how to get perfectly done steaks every time", parsedMetadata.getFirstValue("VIDEO.description"));
-        Assert.assertEquals("http://www.example.com/video123.flv", parsedMetadata.getFirstValue("VIDEO.content_loc"));
-        Assert.assertEquals("http://www.example.com/videoplayer.swf?video=123", parsedMetadata.getFirstValue("VIDEO.player_loc"));
-        //Assert.assertEquals("600", parsedMetadata.getFirstValue("VIDEO.duration"));
-        Assert.assertEquals("2009-11-05T19:20:30+08:00", parsedMetadata.getFirstValue("VIDEO.expiration_date"));
-        Assert.assertEquals("4.2", parsedMetadata.getFirstValue("VIDEO.rating"));
-        Assert.assertEquals("12345", parsedMetadata.getFirstValue("VIDEO.view_count"));
-        Assert.assertEquals("2007-11-05T19:20:30+08:00", parsedMetadata.getFirstValue("VIDEO.publication_date"));
-        Assert.assertEquals("true", parsedMetadata.getFirstValue("VIDEO.family_friendly"));
-        Assert.assertArrayEquals(new String[]{ "sample_tag1", "sample_tag2" }, parsedMetadata.getValues("VIDEO.tags"));
-        Assert.assertArrayEquals(new String[]{ "IE", "GB", "US", "CA" }, parsedMetadata.getValues("VIDEO.allowed_countries"));
-        Assert.assertEquals("http://cooking.example.com", parsedMetadata.getFirstValue("VIDEO.gallery_loc"));
-        Assert.assertEquals("value: 1.99, currency: EUR, type: own, resolution: null", parsedMetadata.getFirstValue("VIDEO.prices"));
-        Assert.assertEquals("true", parsedMetadata.getFirstValue("VIDEO.requires_subscription"));
-        Assert.assertEquals("GrillyMcGrillerson", parsedMetadata.getFirstValue("VIDEO.uploader"));
-        Assert.assertEquals("http://www.example.com/users/grillymcgrillerson", parsedMetadata.getFirstValue("VIDEO.uploader_info"));
-        Assert.assertEquals("false", parsedMetadata.getFirstValue("VIDEO.is_live"));
+        assertVideoAttributes(parsedMetadata);
+    }
+
+    @Test
+    public void testSitemapParsingWithAllExtensions() throws IOException {
+        Map parserConfig = new HashMap();
+        parserConfig.put("sitemap.extensions",  PersistentVector.create(
+                Arrays.asList(Extension.MOBILE.name(), Extension.NEWS.name(), Extension.LINKS.name(),
+                        Extension.VIDEO.name(), Extension.IMAGE.name())));
+        prepareParserBolt("test.parsefilters.json", parserConfig);
+
+        Metadata metadata = new Metadata();
+        // specify that it is a sitemap file
+        metadata.setValue(SiteMapParserBolt.isSitemapKey, "true");
+        // and its mime-type
+        metadata.setValue(HttpHeaders.CONTENT_TYPE, "application/xml");
+
+        parse("http://www.digitalpebble.com/sitemap.xml",
+                "digitalpebble.sitemap.extensions.all.xml", metadata);
+        Values values = (Values) output.getEmitted(Constants.StatusStreamName).get(0);
+        Metadata parsedMetadata = (Metadata) values.get(1);
+        assertImageAttributes(parsedMetadata);
+        assertNewsAttributes(parsedMetadata);
+        assertVideoAttributes(parsedMetadata);
+        assertLinksAttributes(parsedMetadata);
+        assertMobileAttributes(parsedMetadata);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testSitemapParsingWithIllegalExtensionConfigured() throws IOException {
+        Map parserConfig = new HashMap();
+        parserConfig.put("sitemap.extensions",  PersistentVector.create(
+                Arrays.asList("AUDIONEWSLINKS")));
+        prepareParserBolt("test.parsefilters.json", parserConfig);
     }
 
     @Test
@@ -252,4 +235,77 @@ public class SiteMapParserBoltTest extends ParsingTester {
         Assert.assertEquals(1, output.getEmitted().size());
     }
 
+    private void assertNewsAttributes(Metadata metadata) {
+        long numAttributes = metadata.keySet()
+                .stream()
+                .filter(key -> key.startsWith(Extension.NEWS.name() + "."))
+                .count();
+        Assert.assertEquals(7, numAttributes);
+        Assert.assertEquals("The Example Times", metadata.getFirstValue(Extension.NEWS.name() + "." + "name"));
+        Assert.assertEquals("en", metadata.getFirstValue(Extension.NEWS.name() + "." + "language"));
+        Assert.assertArrayEquals(new String[] { "PressRelease", "Blog" }, metadata.getValues(Extension.NEWS.name() + "." + "genres"));
+        Assert.assertEquals("2008-12-23T00:00Z", metadata.getFirstValue(Extension.NEWS.name() + "." + "publication_date"));
+        Assert.assertEquals("Companies A, B in Merger Talks", metadata.getFirstValue(Extension.NEWS.name() + "." + "title"));
+        Assert.assertArrayEquals(new String[] { "business", "merger", "acquisition", "A", "B" }, metadata.getValues(Extension.NEWS.name() + "." + "keywords"));
+        Assert.assertArrayEquals(new String[] { "NASDAQ:A", "NASDAQ:B"}, metadata.getValues(Extension.NEWS.name() + "." + "stock_tickers"));
+    }
+
+    private void assertImageAttributes(Metadata metadata) {
+        long numAttributes = metadata.keySet()
+                .stream()
+                .filter(key -> key.startsWith(Extension.IMAGE.name() + "."))
+                .count();
+        Assert.assertEquals(5, numAttributes);
+        Assert.assertEquals("This is the caption.", metadata.getFirstValue(Extension.IMAGE.name() + "." + "caption"));
+        Assert.assertEquals("http://example.com/photo.jpg", metadata.getFirstValue(Extension.IMAGE.name() + "." + "loc"));
+        Assert.assertEquals("Example photo shot in Limerick, Ireland", metadata.getFirstValue(Extension.IMAGE.name() + "." + "title"));
+        Assert.assertEquals("https://creativecommons.org/licenses/by/4.0/legalcode", metadata.getFirstValue(Extension.IMAGE.name() + "." + "license"));
+        Assert.assertEquals("Limerick, Ireland", metadata.getFirstValue(Extension.IMAGE.name() + "." + "geo_location"));
+    }
+
+    private void assertLinksAttributes(Metadata metadata) {
+        long numAttributes = metadata.keySet()
+                .stream()
+                .filter(key -> key.startsWith(Extension.LINKS.name() + "."))
+                .count();
+        Assert.assertEquals(3, numAttributes);
+        Assert.assertEquals("alternate", metadata.getFirstValue(Extension.LINKS.name() + "." + "params.rel"));
+        Assert.assertEquals("http://www.example.com/english/", metadata.getFirstValue(Extension.LINKS.name() + "." + "href"));
+        Assert.assertEquals("en", metadata.getFirstValue(Extension.LINKS.name() + "." + "params.hreflang"));
+    }
+
+    private void assertVideoAttributes(Metadata metadata) {
+        long numAttributes = metadata.keySet()
+                .stream()
+                .filter(key -> key.startsWith(Extension.VIDEO.name() + "."))
+                .count();
+        Assert.assertEquals(19, numAttributes);
+        Assert.assertEquals("http://www.example.com/thumbs/123.jpg", metadata.getFirstValue(Extension.VIDEO.name() + "." + "thumbnail_loc"));
+        Assert.assertEquals("Grilling steaks for summer", metadata.getFirstValue(Extension.VIDEO.name() + "." + "title"));
+        Assert.assertEquals("Alkis shows you how to get perfectly done steaks every time", metadata.getFirstValue(Extension.VIDEO.name() + "." + "description"));
+        Assert.assertEquals("http://www.example.com/video123.flv", metadata.getFirstValue(Extension.VIDEO.name() + "." + "content_loc"));
+        Assert.assertEquals("http://www.example.com/videoplayer.swf?video=123", metadata.getFirstValue(Extension.VIDEO.name() + "." + "player_loc"));
+        //Assert.assertEquals("600", metadata.getFirstValue(Extension.VIDEO.name() + "." + "duration"));
+        Assert.assertEquals("2009-11-05T19:20:30+08:00", metadata.getFirstValue(Extension.VIDEO.name() + "." + "expiration_date"));
+        Assert.assertEquals("4.2", metadata.getFirstValue(Extension.VIDEO.name() + "." + "rating"));
+        Assert.assertEquals("12345", metadata.getFirstValue(Extension.VIDEO.name() + "." + "view_count"));
+        Assert.assertEquals("2007-11-05T19:20:30+08:00", metadata.getFirstValue(Extension.VIDEO.name() + "." + "publication_date"));
+        Assert.assertEquals("true", metadata.getFirstValue(Extension.VIDEO.name() + "." + "family_friendly"));
+        Assert.assertArrayEquals(new String[]{ "sample_tag1", "sample_tag2" }, metadata.getValues(Extension.VIDEO.name() + "." + "tags"));
+        Assert.assertArrayEquals(new String[]{ "IE", "GB", "US", "CA" }, metadata.getValues(Extension.VIDEO.name() + "." + "allowed_countries"));
+        Assert.assertEquals("http://cooking.example.com", metadata.getFirstValue(Extension.VIDEO.name() + "." + "gallery_loc"));
+        Assert.assertEquals("value: 1.99, currency: EUR, type: own, resolution: null", metadata.getFirstValue(Extension.VIDEO.name() + "." + "prices"));
+        Assert.assertEquals("true", metadata.getFirstValue(Extension.VIDEO.name() + "." + "requires_subscription"));
+        Assert.assertEquals("GrillyMcGrillerson", metadata.getFirstValue(Extension.VIDEO.name() + "." + "uploader"));
+        Assert.assertEquals("http://www.example.com/users/grillymcgrillerson", metadata.getFirstValue(Extension.VIDEO.name() + "." + "uploader_info"));
+        Assert.assertEquals("false", metadata.getFirstValue(Extension.VIDEO.name() + "." + "is_live"));
+    }
+
+    private void assertMobileAttributes(Metadata metadata) {
+        long numAttributes = metadata.keySet()
+                .stream()
+                .filter(key -> key.startsWith(Extension.MOBILE.name() + "."))
+                .count();
+        Assert.assertEquals(0, numAttributes);
+    }
 }

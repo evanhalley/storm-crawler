@@ -29,7 +29,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import crawlercommons.sitemaps.extension.Extension;
 import crawlercommons.sitemaps.extension.ExtensionMetadata;
@@ -94,7 +93,7 @@ public class SiteMapParserBolt extends StatusEmitterBolt {
     /** Delay in minutes used for scheduling sub-sitemaps **/
     private int scheduleSitemapsWithDelay = -1;
 
-    private List<String> attributeTypesToParse;
+    private List<Extension> extensionsToParse;
 
     @Override
     public void execute(Tuple tuple) {
@@ -315,8 +314,7 @@ public class SiteMapParserBolt extends StatusEmitterBolt {
 
     public void addAttributesToMetadata(SiteMapURL url, Metadata metadata) {
 
-        for (String attributeType : attributeTypesToParse) {
-            Extension extension = Extension.valueOf(attributeType);
+        for (Extension extension : extensionsToParse) {
             ExtensionMetadata[] extensionMetadata = url.getAttributesForExtension(extension);
 
             if (extensionMetadata != null) {
@@ -324,7 +322,11 @@ public class SiteMapParserBolt extends StatusEmitterBolt {
                 for (ExtensionMetadata extensionMetadatum : extensionMetadata) {
 
                     for (Map.Entry<String, String[]> entry : extensionMetadatum.asMap().entrySet()) {
-                        metadata.addValues(attributeType + "." + entry.getKey(), Arrays.asList(entry.getValue()));
+
+                        if (entry.getValue() != null) {
+                            metadata.addValues(extension.name() + "." + entry.getKey(),
+                                    Arrays.asList(entry.getValue()));
+                        }
                     }
                 }
             }
@@ -347,10 +349,13 @@ public class SiteMapParserBolt extends StatusEmitterBolt {
                         new MeanReducer()), 30);
         scheduleSitemapsWithDelay = ConfUtils.getInt(stormConf,
                 "sitemap.schedule.delay", scheduleSitemapsWithDelay);
-        attributeTypesToParse = ConfUtils.loadListFromConf("sitemap.extensions", stormConf);
+        List<String> extensionsStrings = ConfUtils.loadListFromConf("sitemap.extensions", stormConf);
+        extensionsToParse = new ArrayList<>(extensionsStrings.size());
 
-        for (String type : attributeTypesToParse) {
-            parser.enableExtension(Extension.valueOf(type));
+        for (String type : extensionsStrings) {
+            Extension extension = Extension.valueOf(type);
+            parser.enableExtension(extension);
+            extensionsToParse.add(extension);
         }
     }
 
