@@ -303,7 +303,7 @@ public class SiteMapParserBolt extends StatusEmitterBolt {
                 if (ol == null) {
                     continue;
                 }
-                addAttributesToMetadata(smurl, ol.getMetadata());
+                parseExtensionAttributes(smurl, ol.getMetadata());
                 links.add(ol);
                 LOG.debug("{} : [sitemap] {}", url, target);
             }
@@ -312,7 +312,7 @@ public class SiteMapParserBolt extends StatusEmitterBolt {
         return links;
     }
 
-    public void addAttributesToMetadata(SiteMapURL url, Metadata metadata) {
+    public void parseExtensionAttributes(SiteMapURL url, Metadata metadata) {
 
         for (Extension extension : extensionsToParse) {
             ExtensionMetadata[] extensionMetadata = url
