@@ -195,7 +195,26 @@ public class SiteMapParserBoltTest extends ParsingTester {
                 .stream()
                 .filter(key -> key.startsWith("VIDEO."))
                 .count();
-        Assert.assertEquals(7, numAttributes);
+        Assert.assertEquals(19, numAttributes);
+        Assert.assertEquals("http://www.example.com/thumbs/123.jpg", parsedMetadata.getFirstValue("VIDEO.thumbnail_loc"));
+        Assert.assertEquals("Grilling steaks for summer", parsedMetadata.getFirstValue("VIDEO.title"));
+        Assert.assertEquals("Alkis shows you how to get perfectly done steaks every time", parsedMetadata.getFirstValue("VIDEO.description"));
+        Assert.assertEquals("http://www.example.com/video123.flv", parsedMetadata.getFirstValue("VIDEO.content_loc"));
+        Assert.assertEquals("http://www.example.com/videoplayer.swf?video=123", parsedMetadata.getFirstValue("VIDEO.player_loc"));
+        //Assert.assertEquals("600", parsedMetadata.getFirstValue("VIDEO.duration"));
+        Assert.assertEquals("2009-11-05T19:20:30+08:00", parsedMetadata.getFirstValue("VIDEO.expiration_date"));
+        Assert.assertEquals("4.2", parsedMetadata.getFirstValue("VIDEO.rating"));
+        Assert.assertEquals("12345", parsedMetadata.getFirstValue("VIDEO.view_count"));
+        Assert.assertEquals("2007-11-05T19:20:30+08:00", parsedMetadata.getFirstValue("VIDEO.publication_date"));
+        Assert.assertEquals("true", parsedMetadata.getFirstValue("VIDEO.family_friendly"));
+        Assert.assertArrayEquals(new String[]{ "sample_tag1", "sample_tag2" }, parsedMetadata.getValues("VIDEO.tags"));
+        Assert.assertArrayEquals(new String[]{ "IE", "GB", "US", "CA" }, parsedMetadata.getValues("VIDEO.allowed_countries"));
+        Assert.assertEquals("http://cooking.example.com", parsedMetadata.getFirstValue("VIDEO.gallery_loc"));
+        Assert.assertEquals("value: 1.99, currency: EUR, type: own, resolution: null", parsedMetadata.getFirstValue("VIDEO.prices"));
+        Assert.assertEquals("true", parsedMetadata.getFirstValue("VIDEO.requires_subscription"));
+        Assert.assertEquals("GrillyMcGrillerson", parsedMetadata.getFirstValue("VIDEO.uploader"));
+        Assert.assertEquals("http://www.example.com/users/grillymcgrillerson", parsedMetadata.getFirstValue("VIDEO.uploader_info"));
+        Assert.assertEquals("false", parsedMetadata.getFirstValue("VIDEO.is_live"));
     }
 
     @Test
