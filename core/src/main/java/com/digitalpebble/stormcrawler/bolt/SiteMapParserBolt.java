@@ -104,7 +104,7 @@ public class SiteMapParserBolt extends StatusEmitterBolt {
         String ct = metadata.getFirstValue(HttpHeaders.CONTENT_TYPE);
 
         LOG.debug("Processing {}", url);
-        
+
         boolean looksLikeSitemap = sniff(content);
         // can force the mimetype as we know it is XML
         if (looksLikeSitemap) {
@@ -315,16 +315,19 @@ public class SiteMapParserBolt extends StatusEmitterBolt {
     public void addAttributesToMetadata(SiteMapURL url, Metadata metadata) {
 
         for (Extension extension : extensionsToParse) {
-            ExtensionMetadata[] extensionMetadata = url.getAttributesForExtension(extension);
+            ExtensionMetadata[] extensionMetadata = url
+                    .getAttributesForExtension(extension);
 
             if (extensionMetadata != null) {
 
                 for (ExtensionMetadata extensionMetadatum : extensionMetadata) {
 
-                    for (Map.Entry<String, String[]> entry : extensionMetadatum.asMap().entrySet()) {
+                    for (Map.Entry<String, String[]> entry : extensionMetadatum
+                            .asMap().entrySet()) {
 
                         if (entry.getValue() != null) {
-                            metadata.addValues(extension.name() + "." + entry.getKey(),
+                            metadata.addValues(
+                                    extension.name() + "." + entry.getKey(),
                                     Arrays.asList(entry.getValue()));
                         }
                     }
@@ -349,7 +352,8 @@ public class SiteMapParserBolt extends StatusEmitterBolt {
                         new MeanReducer()), 30);
         scheduleSitemapsWithDelay = ConfUtils.getInt(stormConf,
                 "sitemap.schedule.delay", scheduleSitemapsWithDelay);
-        List<String> extensionsStrings = ConfUtils.loadListFromConf("sitemap.extensions", stormConf);
+        List<String> extensionsStrings = ConfUtils.loadListFromConf(
+                "sitemap.extensions", stormConf);
         extensionsToParse = new ArrayList<>(extensionsStrings.size());
 
         for (String type : extensionsStrings) {

@@ -75,7 +75,8 @@ public class SiteMapParserBoltTest extends ParsingTester {
     @Test
     public void testSitemapParsingWithImageExtensions() throws IOException {
         Map parserConfig = new HashMap();
-        parserConfig.put("sitemap.extensions",  PersistentVector.create(Collections.singletonList(Extension.IMAGE.name())));
+        parserConfig.put("sitemap.extensions", PersistentVector
+                .create(Collections.singletonList(Extension.IMAGE.name())));
         prepareParserBolt("test.parsefilters.json", parserConfig);
 
         Metadata metadata = new Metadata();
@@ -86,7 +87,8 @@ public class SiteMapParserBoltTest extends ParsingTester {
 
         parse("http://www.digitalpebble.com/sitemap.xml",
                 "digitalpebble.sitemap.extensions.image.xml", metadata);
-        Values values = (Values) output.getEmitted(Constants.StatusStreamName).get(0);
+        Values values = (Values) output.getEmitted(Constants.StatusStreamName)
+                .get(0);
         Metadata parsedMetadata = (Metadata) values.get(1);
         assertImageAttributes(parsedMetadata);
     }
@@ -94,7 +96,8 @@ public class SiteMapParserBoltTest extends ParsingTester {
     @Test
     public void testSitemapParsingWithMobileExtensions() throws IOException {
         Map parserConfig = new HashMap();
-        parserConfig.put("sitemap.extensions", PersistentVector.create(Collections.singletonList(Extension.MOBILE.name())));
+        parserConfig.put("sitemap.extensions", PersistentVector
+                .create(Collections.singletonList(Extension.MOBILE.name())));
         prepareParserBolt("test.parsefilters.json", parserConfig);
 
         Metadata metadata = new Metadata();
@@ -105,7 +108,8 @@ public class SiteMapParserBoltTest extends ParsingTester {
 
         parse("http://www.digitalpebble.com/sitemap.xml",
                 "digitalpebble.sitemap.extensions.mobile.xml", metadata);
-        Values values = (Values) output.getEmitted(Constants.StatusStreamName).get(0);
+        Values values = (Values) output.getEmitted(Constants.StatusStreamName)
+                .get(0);
         Metadata parsedMetadata = (Metadata) values.get(1);
         assertMobileAttributes(parsedMetadata);
     }
@@ -113,7 +117,8 @@ public class SiteMapParserBoltTest extends ParsingTester {
     @Test
     public void testSitemapParsingWithLinkExtensions() throws IOException {
         Map parserConfig = new HashMap();
-        parserConfig.put("sitemap.extensions",  PersistentVector.create(Collections.singletonList(Extension.LINKS.name())));
+        parserConfig.put("sitemap.extensions", PersistentVector
+                .create(Collections.singletonList(Extension.LINKS.name())));
         prepareParserBolt("test.parsefilters.json", parserConfig);
 
         Metadata metadata = new Metadata();
@@ -124,7 +129,8 @@ public class SiteMapParserBoltTest extends ParsingTester {
 
         parse("http://www.digitalpebble.com/sitemap.xml",
                 "digitalpebble.sitemap.extensions.links.xml", metadata);
-        Values values = (Values) output.getEmitted(Constants.StatusStreamName).get(0);
+        Values values = (Values) output.getEmitted(Constants.StatusStreamName)
+                .get(0);
         Metadata parsedMetadata = (Metadata) values.get(1);
         assertLinksAttributes(parsedMetadata);
     }
@@ -132,7 +138,8 @@ public class SiteMapParserBoltTest extends ParsingTester {
     @Test
     public void testSitemapParsingWithNewsExtensions() throws IOException {
         Map parserConfig = new HashMap();
-        parserConfig.put("sitemap.extensions",  PersistentVector.create(Collections.singletonList(Extension.NEWS.name())));
+        parserConfig.put("sitemap.extensions", PersistentVector
+                .create(Collections.singletonList(Extension.NEWS.name())));
         prepareParserBolt("test.parsefilters.json", parserConfig);
 
         Metadata metadata = new Metadata();
@@ -143,7 +150,8 @@ public class SiteMapParserBoltTest extends ParsingTester {
 
         parse("http://www.digitalpebble.com/sitemap.xml",
                 "digitalpebble.sitemap.extensions.news.xml", metadata);
-        Values values = (Values) output.getEmitted(Constants.StatusStreamName).get(0);
+        Values values = (Values) output.getEmitted(Constants.StatusStreamName)
+                .get(0);
         Metadata parsedMetadata = (Metadata) values.get(1);
         assertNewsAttributes(parsedMetadata);
     }
@@ -151,7 +159,8 @@ public class SiteMapParserBoltTest extends ParsingTester {
     @Test
     public void testSitemapParsingWithVideoExtensions() throws IOException {
         Map parserConfig = new HashMap();
-        parserConfig.put("sitemap.extensions",  PersistentVector.create(Collections.singletonList(Extension.VIDEO.name())));
+        parserConfig.put("sitemap.extensions", PersistentVector
+                .create(Collections.singletonList(Extension.VIDEO.name())));
         prepareParserBolt("test.parsefilters.json", parserConfig);
 
         Metadata metadata = new Metadata();
@@ -162,7 +171,8 @@ public class SiteMapParserBoltTest extends ParsingTester {
 
         parse("http://www.digitalpebble.com/sitemap.xml",
                 "digitalpebble.sitemap.extensions.video.xml", metadata);
-        Values values = (Values) output.getEmitted(Constants.StatusStreamName).get(0);
+        Values values = (Values) output.getEmitted(Constants.StatusStreamName)
+                .get(0);
         Metadata parsedMetadata = (Metadata) values.get(1);
         assertVideoAttributes(parsedMetadata);
     }
@@ -170,9 +180,10 @@ public class SiteMapParserBoltTest extends ParsingTester {
     @Test
     public void testSitemapParsingWithAllExtensions() throws IOException {
         Map parserConfig = new HashMap();
-        parserConfig.put("sitemap.extensions",  PersistentVector.create(
-                Arrays.asList(Extension.MOBILE.name(), Extension.NEWS.name(), Extension.LINKS.name(),
-                        Extension.VIDEO.name(), Extension.IMAGE.name())));
+        parserConfig.put("sitemap.extensions", PersistentVector.create(Arrays
+                .asList(Extension.MOBILE.name(), Extension.NEWS.name(),
+                        Extension.LINKS.name(), Extension.VIDEO.name(),
+                        Extension.IMAGE.name())));
         prepareParserBolt("test.parsefilters.json", parserConfig);
 
         Metadata metadata = new Metadata();
@@ -183,7 +194,8 @@ public class SiteMapParserBoltTest extends ParsingTester {
 
         parse("http://www.digitalpebble.com/sitemap.xml",
                 "digitalpebble.sitemap.extensions.all.xml", metadata);
-        Values values = (Values) output.getEmitted(Constants.StatusStreamName).get(0);
+        Values values = (Values) output.getEmitted(Constants.StatusStreamName)
+                .get(0);
         Metadata parsedMetadata = (Metadata) values.get(1);
         assertImageAttributes(parsedMetadata);
         assertNewsAttributes(parsedMetadata);
@@ -193,10 +205,11 @@ public class SiteMapParserBoltTest extends ParsingTester {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testSitemapParsingWithIllegalExtensionConfigured() throws IOException {
+    public void testSitemapParsingWithIllegalExtensionConfigured()
+            throws IOException {
         Map parserConfig = new HashMap();
-        parserConfig.put("sitemap.extensions",  PersistentVector.create(
-                Arrays.asList("AUDIONEWSLINKS")));
+        parserConfig.put("sitemap.extensions",
+                PersistentVector.create(Arrays.asList("AUDIONEWSLINKS")));
         prepareParserBolt("test.parsefilters.json", parserConfig);
     }
 
